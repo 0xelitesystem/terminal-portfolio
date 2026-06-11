@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terminal Portfolio</title>
+<meta name="description" content="A single-file personal portfolio styled as an interactive terminal. Replace the data, ship.">
+<meta name="ai.description" content="Single-file HTML portfolio template that renders as an interactive terminal. Visitors type commands (help, about, projects, contact, etc.) and get formatted output. All data is in a single CONFIG object at the top of the script for easy customization. Light and dark themes.">
+<style>
+:root{--bg:#1a1a1f;--surface:#22222a;--ink:#e8e8ee;--ink-soft:#9090a0;--rule:#33333d;--accent:#5fbf60;--accent-2:#5dade2;--accent-3:#f4a261;--prompt:#bb86fc;--mono:ui-monospace,"JetBrains Mono","SF Mono",Menlo,Consolas,monospace}
+[data-theme="light"]{--bg:#f8f8f4;--surface:#ffffff;--ink:#1a1a1f;--ink-soft:#5a5a6a;--rule:#dcdce0;--accent:#1f6f43;--accent-2:#1a5490;--accent-3:#a04500;--prompt:#7e22ce}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+body{font-family:var(--mono);background:var(--bg);color:var(--ink);line-height:1.5;font-size:14px;min-height:100vh;padding:1rem}
+.frame{max-width:880px;margin:0 auto;background:var(--surface);border:1px solid var(--rule);border-radius:6px;overflow:hidden;display:flex;flex-direction:column;min-height:calc(100vh - 2rem)}
+.titlebar{display:flex;align-items:center;justify-content:space-between;padding:.5rem .75rem;background:var(--rule);border-bottom:1px solid var(--rule);font-size:.75rem;color:var(--ink-soft)}
+.dots{display:flex;gap:.4rem}
+.dot{width:11px;height:11px;border-radius:50%;background:var(--ink-soft);opacity:.5}
+.dot:nth-child(1){background:#ff5f56}
+.dot:nth-child(2){background:#ffbd2e}
+.dot:nth-child(3){background:#27c93f}
+.title-text{font-weight:600}
+.theme-toggle{background:transparent;color:var(--ink-soft);border:1px solid transparent;padding:.2rem .5rem;font:inherit;font-size:.6875rem;font-family:var(--mono);cursor:pointer;border-radius:3px}
+.theme-toggle:hover{background:var(--bg);color:var(--ink)}
+.theme-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.terminal{flex:1;padding:1rem 1.25rem;overflow-y:auto;font-size:.875rem;line-height:1.6}
+.line{word-wrap:break-word;white-space:pre-wrap}
+.prompt-line{display:flex;align-items:flex-start;gap:.4rem}
+.prompt{color:var(--prompt);user-select:none;flex-shrink:0}
+.cmd{color:var(--ink);flex:1}
+.input-line{display:flex;align-items:center;gap:.4rem;margin-top:.2rem}
+.input-line .prompt{color:var(--prompt)}
+.cmd-input{flex:1;background:transparent;color:var(--ink);border:none;outline:none;font-family:var(--mono);font-size:.875rem;line-height:1.6;padding:0;caret-color:var(--accent)}
+.cmd-input:focus{outline:none}
+.section-title{color:var(--accent-2);font-weight:600;margin-top:.4rem}
+.k{color:var(--accent-3)}
+.v{color:var(--ink)}
+.muted{color:var(--ink-soft)}
+.success{color:var(--accent)}
+.error{color:#f08585}
+.link{color:var(--accent-2);text-decoration:underline;text-underline-offset:2px}
+.link:hover{color:var(--accent)}
+.banner{color:var(--accent);white-space:pre;font-size:.6875rem;line-height:1.2;margin-bottom:.5rem}
+@media(max-width:540px){.banner{font-size:.4375rem}}
+.spacer{height:.5rem}
+@media(max-width:540px){body{padding:.5rem}.frame{min-height:calc(100vh - 1rem)}}
+</style>
+</head>
+<body>
+<div class="frame">
+<div class="titlebar">
+<div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+<span class="title-text" id="title-text">{{ HANDLE }} -- ~ -- bash</span>
+<button type="button" class="theme-toggle" id="theme-btn" aria-label="Toggle theme">[ light ]</button>
+</div>
+<div class="terminal" id="terminal" tabindex="0">
+<div class="banner" id="banner"></div>
+<div class="line muted" id="welcome"></div>
+<div class="line" id="output-zone"></div>
+<div class="input-line">
+<span class="prompt" id="active-prompt">guest@portfolio:~$</span>
+<input type="text" class="cmd-input" id="cmd-input" autofocus autocomplete="off" spellcheck="false" aria-label="Terminal command">
+</div>
+</div>
+</div>
+<script>
+"use strict";
+
+// =============================================================================
+// CONFIG -- replace with your own.
+// =============================================================================
+const CONFIG = {
+  handle: "0xelitesystem",
+  prompt: "guest@portfolio:~$",
+  banner: `
+   _______ _______
+  |  _____|_______|
+  | | __  |_______|
+  | ||_  | |_______|
+  |_____|_|_______|
+  `,
+  welcomeText: "Welcome. Type 'help' to see available commands.",
+  about: [
+    "Builder. Solo dev. Indie SaaS.",
+    "Currently shipping useful tools and writing about the process."
+  ],
+  skills: {
+    "Languages": "TypeScript, JavaScript, Python, Go, Bash",
+    "Backend": "Node, Express, Hono, Postgres, Redis",
+    "Frontend": "React, vanilla JS, single-file HTML",
+    "Infra": "Cloudflare, Vercel, AWS, Docker, GitHub Actions",
+    "AI": "Anthropic, OpenAI, prompt engineering, MCP"
+  },
+  projects: [
+    { name: "byok-patterns", desc: "Three deeply-built BYOK reference implementations.", url: "https://github.com/0xelitesystem/byok-patterns" },
+    { name: "claude-eval-harness", desc: "Compare Claude models side-by-side.", url: "https://github.com/0xelitesystem/claude-eval-harness" },
+    { name: "single-file-saas-template", desc: "Ship a SaaS in one HTML file.", url: "https://github.com/0xelitesystem/single-file-saas-template" }
+  ],
+  contact: [
+    { label: "GitHub", value: "github.com/0xelitesystem", url: "https://github.com/0xelitesystem" },
+    { label: "Email", value: "hello@example.com", url: "mailto:hello@example.com" }
+  ],
+  social: [
+    "GitHub: https://github.com/0xelitesystem"
+  ]
+};
+
+const $=id=>document.getElementById(id);
+const escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+const term=$("terminal");
+const input=$("cmd-input");
+const output=$("output-zone");
+const history=[];
+let historyIdx=-1;
+
+$("banner").textContent=CONFIG.banner;
+$("welcome").textContent=CONFIG.welcomeText;
+$("title-text").textContent=`${CONFIG.handle} -- ~ -- bash`;
+$("active-prompt").textContent=CONFIG.prompt;
+
+function appendBlock(html){
+  const div=document.createElement("div");
+  div.className="line";
+  div.innerHTML=html;
+  output.appendChild(div);
+}
+
+function commandLine(cmd){
+  return `<div class="prompt-line"><span class="prompt">${escapeHtml(CONFIG.prompt)}</span><span class="cmd">${escapeHtml(cmd)}</span></div>`;
+}
+
+const COMMANDS={
+  help: ()=>{
+    const cmds=[
+      ["help","this menu"],
+      ["about","short bio"],
+      ["skills","tech stack"],
+      ["projects","selected projects"],
+      ["contact","how to reach me"],
+      ["social","social profiles"],
+      ["clear","clear the screen"],
+      ["theme","toggle light/dark"],
+      ["whoami","what you're typing as"],
+      ["date","current date and time"],
+      ["echo <text>","print the given text"]
+    ];
+    return cmds.map(([c,d])=>`  <span class="k">${escapeHtml(c.padEnd(18))}</span><span class="v">${escapeHtml(d)}</span>`).join("\n");
+  },
+  about: ()=>{
+    return `<div class="section-title">// about</div>${CONFIG.about.map(l=>"\n  "+escapeHtml(l)).join("")}`;
+  },
+  skills: ()=>{
+    let out=`<div class="section-title">// skills</div>`;
+    for(const[k,v]of Object.entries(CONFIG.skills)){
+      out+=`\n  <span class="k">${escapeHtml(k.padEnd(12))}</span><span class="v">${escapeHtml(v)}</span>`;
+    }
+    return out;
+  },
+  projects: ()=>{
+    let out=`<div class="section-title">// projects</div>`;
+    for(const p of CONFIG.projects){
+      out+=`\n  <span class="k">${escapeHtml(p.name)}</span>\n    ${escapeHtml(p.desc)}\n    <a class="link" href="${escapeHtml(p.url)}" target="_blank" rel="noopener">${escapeHtml(p.url)}</a>`;
+    }
+    return out;
+  },
+  contact: ()=>{
+    let out=`<div class="section-title">// contact</div>`;
+    for(const c of CONFIG.contact){
+      out+=`\n  <span class="k">${escapeHtml(c.label.padEnd(10))}</span><a class="link" href="${escapeHtml(c.url)}" target="_blank" rel="noopener">${escapeHtml(c.value)}</a>`;
+    }
+    return out;
+  },
+  social: ()=>{
+    return `<div class="section-title">// social</div>\n  ${CONFIG.social.map(s=>{
+      const m=s.match(/^([^:]+):\s*(\S+)/);
+      if(m)return`<span class="k">${escapeHtml(m[1].padEnd(10))}</span><a class="link" href="${escapeHtml(m[2])}" target="_blank" rel="noopener">${escapeHtml(m[2])}</a>`;
+      return escapeHtml(s);
+    }).join("\n  ")}`;
+  },
+  clear: ()=>{
+    output.innerHTML="";
+    return null;
+  },
+  theme: ()=>{
+    const cur=document.body.dataset.theme==="light"?"light":"dark";
+    const next=cur==="light"?"dark":"light";
+    if(next==="light")document.body.dataset.theme="light";
+    else delete document.body.dataset.theme;
+    $("theme-btn").textContent=next==="light"?"[ dark ]":"[ light ]";
+    return `<span class="success">theme: ${next}</span>`;
+  },
+  whoami: ()=>"guest",
+  date: ()=>new Date().toString(),
+  echo: (args)=>escapeHtml(args.join(" ")),
+  ls: ()=>"about  skills  projects  contact  social",
+  pwd: ()=>"/home/guest",
+  cat: (args)=>{
+    if(args.length===0)return`<span class="error">cat: missing operand. Try 'cat about' or 'cat projects'.</span>`;
+    const target=args[0];
+    if(COMMANDS[target])return COMMANDS[target]([]);
+    return`<span class="error">cat: ${escapeHtml(target)}: No such file or directory</span>`;
+  },
+  exit: ()=>"<span class='muted'>You can't exit a terminal that's just a portfolio. But thanks for trying.</span>",
+  sudo: ()=>"<span class='error'>guest is not in the sudoers file. This incident will not be reported.</span>"
+};
+
+function runCommand(line){
+  const trimmed=line.trim();
+  if(!trimmed){
+    appendBlock(commandLine(""));
+    return;
+  }
+  history.push(trimmed);
+  historyIdx=history.length;
+  appendBlock(commandLine(trimmed));
+  const[cmd,...args]=trimmed.split(/\s+/);
+  const fn=COMMANDS[cmd.toLowerCase()];
+  if(fn){
+    const out=fn(args);
+    if(out!==null&&out!==undefined)appendBlock(out);
+  }else{
+    appendBlock(`<span class="error">${escapeHtml(cmd)}: command not found. Type 'help'.</span>`);
+  }
+  // Scroll to bottom
+  setTimeout(()=>term.scrollTop=term.scrollHeight,0);
+}
+
+input.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){
+    e.preventDefault();
+    const v=input.value;
+    input.value="";
+    runCommand(v);
+  }else if(e.key==="ArrowUp"){
+    e.preventDefault();
+    if(historyIdx>0){historyIdx--;input.value=history[historyIdx]||""}
+  }else if(e.key==="ArrowDown"){
+    e.preventDefault();
+    if(historyIdx<history.length-1){historyIdx++;input.value=history[historyIdx]||""}
+    else{historyIdx=history.length;input.value=""}
+  }else if(e.key==="Tab"){
+    e.preventDefault();
+    const partial=input.value.toLowerCase();
+    const matches=Object.keys(COMMANDS).filter(c=>c.startsWith(partial));
+    if(matches.length===1){input.value=matches[0]}
+    else if(matches.length>1){
+      appendBlock(commandLine(input.value));
+      appendBlock(matches.join("  "));
+    }
+  }
+});
+
+term.addEventListener("click",()=>input.focus());
+
+$("theme-btn").addEventListener("click",()=>COMMANDS.theme());
+
+if(window.matchMedia&&!window.matchMedia("(prefers-color-scheme: dark)").matches){
+  document.body.dataset.theme="light";
+  $("theme-btn").textContent="[ dark ]";
+}
+
+input.focus();
+</script>
+</body>
+</html>
