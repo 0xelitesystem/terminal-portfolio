@@ -57,6 +57,10 @@ To add a new command, add a key to the `COMMANDS` object. Commands are functions
 - No autocomplete for command arguments.
 - No persistent history across sessions (in-memory only).
 
+## More
+
+Part of a catalog of single-file browser tools and plain-language references, all MIT licensed and dependency-free: [0xelitesystem.github.io](https://0xelitesystem.github.io/). Built by [elitesystem.ai](https://elitesystem.ai).
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
