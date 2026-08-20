@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -54,6 +54,29 @@ body{font-family:var(--mono);background:var(--bg);color:var(--ink);line-height:1
 </style>
 <link rel="canonical" href="https://0xelitesystem.github.io/terminal-portfolio/">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Terminal Portfolio","applicationCategory":"DeveloperApplication","operatingSystem":"Any (browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"url":"https://0xelitesystem.github.io/terminal-portfolio/","author":{"@type":"Person","name":"0xelitesystem","url":"https://elitesystem.ai"}}</script>
+<style>
+/* elitesystem brand tokens: chrome only, meaning preserved */
+:root, :root[data-theme="dark"] {
+  --accent: #d4ff3a;
+  --accent-2: #ffb454;
+  --bg: #0a0a0a;
+  --ink: #e8e8e3;
+  --ink-soft: #a8a8a3;
+  --rule: #1f1f1d;
+  --surface: #111110;
+}
+:root[data-theme="light"] {
+  --accent: #2d6b00;
+  --accent-2: #a05a00;
+  --bg: #e8ebef;
+  --ink: #0a0a0a;
+  --ink-soft: #2a2a27;
+  --rule: #c8cdd5;
+  --surface: #dee2e8;
+}
+:root { color-scheme: dark; }
+:root[data-theme="light"] { color-scheme: light; }
+</style>
 </head>
 <body>
 <h1 class="sr-only">Terminal Portfolio</h1>
