@@ -4,15 +4,38 @@ A single-file personal portfolio styled as an interactive terminal. Visitors typ
 
 **Live demo:** https://0xelitesystem.github.io/terminal-portfolio/
 
-## Why
+## Why this exists
 
 Standard portfolios are hard to make interesting because everyone has one. A terminal is a different surface: visitors who get the joke explore for fun, visitors who don't can still type `help` and find what they need.
 
-## Use it
+It is one HTML file with no dependencies and no tracking, released under MIT.
+
+## Use
 
 Open `index.html` in any browser, or visit the hosted version at `https://0xelitesystem.github.io/terminal-portfolio/` once Pages is enabled.
 
 Type a command and press Enter. Try `help` first.
+
+## Privacy
+
+The page makes no network requests. Every command answers from the `CONFIG` object inside `index.html`. Command history lives in memory and is gone when the tab closes. The page saves one thing in localStorage: your light or dark theme choice, under the key `theme`. Links in the projects, contact and social output open other sites only when a visitor clicks them.
+
+## Run locally
+
+```
+git clone https://github.com/0xelitesystem/terminal-portfolio
+cd terminal-portfolio
+```
+
+Open `index.html` in any browser. Or serve the folder and visit http://localhost:8000:
+
+```
+python -m http.server 8000
+```
+
+## Build
+
+No build step. The whole tool is one `index.html` file with inline CSS and JavaScript.
 
 ## Customize
 
